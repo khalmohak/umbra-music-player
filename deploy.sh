@@ -51,12 +51,22 @@ EOF
 
 step "checking Node.js"
 
-if ! command -v node &>/dev/null; then
-  yellow "Node.js not found — installing via NodeSource (LTS)"
+install_node() {
+  yellow "installing Node.js LTS (v22) via NodeSource"
   apt-get update -qq
   apt-get install -y ca-certificates curl gnupg
-  curl -fsSL https://deb.nodesource.com/setup_lts.x | bash -
+  curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
   apt-get install -y nodejs
+}
+
+if ! command -v node &>/dev/null; then
+  install_node
+else
+  node_major=$(node --version | sed 's/v\([0-9]*\).*/\1/')
+  if [[ "$node_major" -lt 20 ]]; then
+    yellow "node v$(node --version | tr -d v) is too old (need >=20) — upgrading"
+    install_node
+  fi
 fi
 
 node_ver=$(node --version)
